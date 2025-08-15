@@ -98,7 +98,7 @@ const Login = () => {
                 <div className="mt-6 text-center">
                     <p className="text-sm text-gray-600">
                         Don't have an account?
-                        <button onClick={() => navigate("/signup")} className="text-blue-600 hover:text-blue-500 font-medium">
+                        <button onClick={() => navigate("/signup")} className="text-blue-600 hover:text-blue-500 font-medium cursor-pointer">
                             Sign up
                         </button>
                     </p>

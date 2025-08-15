@@ -124,8 +124,8 @@ const Signup = () => {
                     <p className="text-sm text-gray-600">
                         Already have an account?{" "}
                         <button
-                            onClick={() => navigate("/signup")}
-                            className="text-green-600 hover:text-green-500 font-medium"
+                            onClick={() => navigate("/login")}
+                            className="text-green-600 hover:text-green-500 font-medium cursor-pointer"
                         >
                             Sign in
                         </button>
