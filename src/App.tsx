@@ -1,25 +1,40 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./core/components/Login";     // ensure file names & paths match case
+import Login from "./core/components/Login";
 import Signup from "./core/components/Signup";
-import Dashboard from "./core/components/Dashboard";
 import { AuthProvider } from "./shared/context/AuthContext";
 import ProtectedRoute from "./core/guard/ProtectecGuard";
 import NotFoundRedirect from "./core/guard/NotFoundRedirecGuardt";
 import { Toaster } from "sonner";
+import AdminDashboard from "./core/components/AdminDashboard";
+import FeedbackForm from "./core/components/FeedbackForm";
+import Layout from "./core/layout/Layout";
 
 export default function App() {
   return (
     <AuthProvider>
-      {/* Toaser */}
       <Toaster duration={3000} />
       <Router>
         <Routes>
-          {/* Protected */}
+          {/* Admin Dashboard */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
-                <Dashboard />
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* User Feedback */}
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <Layout>
+                  <FeedbackForm />
+                </Layout>
               </ProtectedRoute>
             }
           />

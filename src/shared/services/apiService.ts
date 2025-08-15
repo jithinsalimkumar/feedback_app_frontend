@@ -16,11 +16,21 @@ const apiService = axios.create({
 });
 
 apiService.interceptors.request.use(
-    (config) => {
+    (config: any) => {
 
         if (!environment.apiUrl) {
             throw new Error("Missing API URL in environment config");
         }
+
+        // Add token to headers for all requests except login/signup
+        const token = sessionStorage.getItem("token");
+        if (token && config.url && !config.url.includes("/login") && !config.url.includes("/signup")) {
+            config.headers = {
+                ...config.headers,
+                Authorization: `Bearer ${token}`,
+            };
+        }
+
         return config;
     },
     (error) => Promise.reject(error)

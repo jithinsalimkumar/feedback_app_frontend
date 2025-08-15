@@ -1,6 +1,9 @@
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import api from "../../shared/services/apiService";
+import type { SignInResponse } from "../../shared/models/login.res.model";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -14,14 +17,35 @@ const Login = () => {
     }, []);
 
     const handleSubmit = useCallback(
-        (e: React.FormEvent) => {
+        async (e: React.FormEvent) => {
             e.preventDefault();
             setIsLoading(true);
-            console.log("Form submitted", form);
-            setTimeout(() => setIsLoading(false), 1000);
+
+            try {
+                const payload: { email: string; password: string } = {
+                    email: form.email,
+                    password: form.password,
+                };
+
+                const response = await api.POST<SignInResponse, typeof payload>("/login", payload);
+
+                if (response) {
+                    // Store token and role in sessionStorage
+                    sessionStorage.setItem("token", response.token);
+                    sessionStorage.setItem("role", response.is_admin ? "admin" : "user");
+                    toast.success("Login Successfully");
+                    navigate("/dashboard");
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                toast.error("Login failed. Please try again.");
+            } finally {
+                setIsLoading(false);
+            }
         },
-        [form]
+        [form, navigate]
     );
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">

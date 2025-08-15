@@ -1,4 +1,6 @@
 /* Tailwind css configuration */
 @import "tailwindcss";
 
-
+button{
+    cursor: pointer;
+}

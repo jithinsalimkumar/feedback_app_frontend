@@ -1,43 +1,58 @@
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../shared/services/apiService";
+import { toast } from "sonner";
 
 interface SignupForm {
     email: string;
     password: string;
-    confirmPassword: string;
+    role: string;
 }
 
-const INITIALFORMSTATE = {
+const INITIALFORMSTATE: SignupForm = {
     email: "",
     password: "",
-    confirmPassword: "",
-}
+    role: "user",
+};
 
 const Signup = () => {
-
     const navigate = useNavigate();
     const [form, setForm] = useState<SignupForm>(INITIALFORMSTATE);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = useCallback(
-        (e: React.FormEvent) => {
+        async (e: React.FormEvent) => {
             e.preventDefault();
-
             setIsLoading(true);
-            console.log("Form submitted:", form);
 
-            setTimeout(() => {
+            try {
+                const payload = {
+                    email: form.email,
+                    password: form.password,
+                    is_admin: form.role === "admin",
+                };
+
+                const response = await api.POST("/signup", payload);
+                if (response) {
+                    toast.success("Signup Successfully");
+                    navigate("/login");
+                }
+
+            } catch (error) {
+                console.error("Signup error:", error);
+            } finally {
                 setIsLoading(false);
-            }, 1000);
+            }
         },
-        [form]
+        [form, navigate]
     );
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
@@ -51,6 +66,7 @@ const Signup = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Email Field */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Email Address
@@ -69,6 +85,7 @@ const Signup = () => {
                         </div>
                     </div>
 
+                    {/* Password Field */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Password
@@ -94,23 +111,23 @@ const Signup = () => {
                         </div>
                     </div>
 
+                    {/* Role Dropdown */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Confirm Password
+                            Role
                         </label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                value={form.confirmPassword}
-                                onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                placeholder="Confirm your password"
-                                required
-                            />
-                        </div>
+                        <select
+                            name="role"
+                            value={form.role}
+                            onChange={handleChange}
+                            className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
                     </div>
+
+                    {/* Submit Button */}
                     <button
                         type="submit"
                         disabled={isLoading}
