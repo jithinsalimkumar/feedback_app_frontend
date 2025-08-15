@@ -10,10 +10,10 @@ import { Toaster } from "sonner";
 export default function App() {
   return (
     <AuthProvider>
+      {/* Toaser */}
+      <Toaster duration={3000} />
       <Router>
         <Routes>
-          {/* Toaser */}
-          <Toaster duration={3000} />
           {/* Protected */}
           <Route
             path="/dashboard"
