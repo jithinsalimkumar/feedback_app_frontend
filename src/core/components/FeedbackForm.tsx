@@ -1,30 +1,45 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { toast } from "sonner";
+import api from "../../shared/services/apiService";
 
 export default function FeedbackForm() {
   const [rating, setRating] = useState<number>(0);
-  const [comment, setComment] = useState('');
-  const [experience, setExperience] = useState('');
+  const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const [predictedSentiment, setPredictedSentiment] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating, comment, experience }),
-        credentials: 'include',
-      });
 
-      if (response.ok) {
-        navigate('/thank-you');
-      }
+    try {
+      const payload = { rating, comment };
+
+      const response = await api.POST<{ message: string; predicted_sentiment: string }, typeof payload>(
+        "/feedback",
+        payload
+      );
+
+      toast.success(response.message);
+      setPredictedSentiment(response.predicted_sentiment);
+    } catch (error) {
+      console.error("Feedback error:", error);
+      toast.error("Failed to submit feedback. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const sentimentColor = (sentiment: string) => {
+    switch (sentiment.toLowerCase()) {
+      case "positive":
+        return "bg-green-100 text-green-700";
+      case "neutral":
+        return "bg-gray-100 text-gray-700";
+      case "negative":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -41,9 +56,10 @@ export default function FeedbackForm() {
               <button
                 key={star}
                 type="button"
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  rating >= star ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-700'
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${rating >= star
+                  ? "bg-yellow-400 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
                 onClick={() => setRating(star)}
               >
                 {star}
@@ -66,34 +82,23 @@ export default function FeedbackForm() {
           />
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="experience" className="block text-gray-700 font-medium mb-2">
-            What best describes your experience?
-          </label>
-          <select
-            id="experience"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={experience}
-            onChange={(e) => setExperience(e.target.value)}
-            required
-          >
-            <option value="">Select an option</option>
-            <option value="excellent">Excellent</option>
-            <option value="good">Good</option>
-            <option value="average">Average</option>
-            <option value="poor">Poor</option>
-            <option value="terrible">Terrible</option>
-          </select>
-        </div>
-
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 transition-colors"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+          {isSubmitting ? "Submitting..." : "Submit Feedback"}
         </button>
       </form>
+
+      {/* Display Predicted Sentiment */}
+      {predictedSentiment && (
+        <div
+          className={`mt-6 p-4 rounded-md border ${sentimentColor(predictedSentiment)} font-semibold`}
+        >
+          Predicted Sentiment: {predictedSentiment.toUpperCase()}
+        </div>
+      )}
     </div>
   );
 }

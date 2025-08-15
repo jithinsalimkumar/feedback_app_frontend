@@ -12,7 +12,10 @@ import Layout from "./core/layout/Layout";
 export default function App() {
   return (
     <AuthProvider>
-      <Toaster duration={3000} />
+     <Toaster
+        position="top-right"
+        richColors
+      />
       <Router>
         <Routes>
           {/* Admin Dashboard */}
