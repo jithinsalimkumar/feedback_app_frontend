@@ -1,4 +1,3 @@
-// AdminDashboard.tsx
 import { useEffect, useState } from "react";
 import {
   PieChart,
@@ -11,8 +10,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from "recharts";
+import type { ReviewsApiResponse } from "../../shared/models/admin-feedback";
+import api from "../../shared/services/apiService";
 
 // -------------------- Types --------------------
 export type Feedback = {
@@ -20,7 +21,7 @@ export type Feedback = {
   userName: string;
   rating: number;
   comment: string;
-  sentiment: "positive" | "neutral" | "negative";
+  sentiment: "positive" | "neutral" | "negative" | "Unknown";
   createdAt: string;
 };
 
@@ -29,75 +30,8 @@ export type DashboardStats = {
   positive: number;
   neutral: number;
   negative: number;
+  unknown: number;
   averageRating: number;
-};
-
-// Mock data for demonstration
-const mockReviews: Feedback[] = [
-  {
-    id: 1,
-    userName: "John Doe",
-    rating: 5,
-    comment: "Excellent service!",
-    sentiment: "positive",
-    createdAt: "2023-05-15T10:30:00Z"
-  },
-  {
-    id: 2,
-    userName: "Jane Smith",
-    rating: 3,
-    comment: "It was okay, could be better",
-    sentiment: "neutral",
-    createdAt: "2023-05-14T14:45:00Z"
-  },
-  {
-    id: 3,
-    userName: "Robert Johnson",
-    rating: 1,
-    comment: "Terrible experience",
-    sentiment: "negative",
-    createdAt: "2023-05-13T09:15:00Z"
-  },
-  {
-    id: 4,
-    userName: "Emily Davis",
-    rating: 4,
-    comment: "Very good, but room for improvement",
-    sentiment: "positive",
-    createdAt: "2023-05-12T16:20:00Z"
-  },
-  {
-    id: 5,
-    userName: "Michael Wilson",
-    rating: 2,
-    comment: "Disappointed with the service",
-    sentiment: "negative",
-    createdAt: "2023-05-11T11:10:00Z"
-  },
-  {
-    id: 6,
-    userName: "Sarah Brown",
-    rating: 5,
-    comment: "Absolutely perfect!",
-    sentiment: "positive",
-    createdAt: "2023-05-10T13:25:00Z"
-  },
-  {
-    id: 7,
-    userName: "David Taylor",
-    rating: 4,
-    comment: "Great overall experience",
-    sentiment: "positive",
-    createdAt: "2023-05-09T08:40:00Z"
-  }
-];
-
-const mockStats: DashboardStats = {
-  totalReviews: 7,
-  positive: 4,
-  neutral: 1,
-  negative: 2,
-  averageRating: 3.57
 };
 
 // -------------------- Main Component --------------------
@@ -108,26 +42,42 @@ export default function AdminDashboard() {
     positive: 0,
     neutral: 0,
     negative: 0,
-    averageRating: 0
+    unknown: 0,
+    averageRating: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // In a real app, you would fetch from your API:
-        // const [reviewsRes, statsRes] = await Promise.all([
-        //   fetch("/api/admin/reviews"),
-        //   fetch("/api/admin/stats"),
-        // ]);
-        // const reviewsData = await reviewsRes.json();
-        // const statsData = await statsRes.json();
+        const response: ReviewsApiResponse = await api.GET("/admin/feedback");
 
-        // For demo purposes, using mock data:
-        setReviews(mockReviews);
-        setStats(mockStats);
+        // Map API reviews to Feedback type
+        const mappedReviews: Feedback[] = response.reviews.map((r) => ({
+          id: r.id,
+          userName: r.email,
+          rating: r.rating,
+          comment: r.comment,
+          sentiment: r.sentiment,
+          createdAt: r.created_at,
+        }));
+
+        // Calculate average rating
+        const avgRating =
+          mappedReviews.reduce((sum, r) => sum + r.rating, 0) /
+          (mappedReviews.length || 1);
+
+        setReviews(mappedReviews);
+        setStats({
+          totalReviews: response.summary.total_reviews,
+          positive: response.summary.positive,
+          neutral: response.summary.neutral,
+          negative: response.summary.negative,
+          unknown: response.summary.unknown,
+          averageRating: parseFloat(avgRating.toFixed(2)),
+        });
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching feedback:", error);
       } finally {
         setIsLoading(false);
       }
@@ -136,20 +86,18 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  // Prepare data for rating distribution chart
+  // -------------------- Charts Data --------------------
   const ratingData = [1, 2, 3, 4, 5].map((rating) => ({
     rating,
-    count: reviews.filter((r) => Math.round(r.rating) === rating).length
+    count: reviews.filter((r) => Math.round(r.rating) === rating).length,
   }));
 
-  // Prepare data for sentiment pie chart
   const sentimentData = [
     { name: "Positive", value: stats.positive, color: "#10B981" },
     { name: "Neutral", value: stats.neutral, color: "#F59E0B" },
-    { name: "Negative", value: stats.negative, color: "#EF4444" }
+    { name: "Negative", value: stats.negative, color: "#EF4444" },
   ];
 
-  // Custom tooltip for pie chart
   const CustomPieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -216,7 +164,7 @@ export default function AdminDashboard() {
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) =>
-                    `${name} ${(percent??0* 100).toFixed(0)}%`
+                    `${name} ${(percent ?? 0 * 100).toFixed(0)}%`
                   }
                 >
                   {sentimentData.map((entry, index) => (
@@ -235,34 +183,16 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={ratingData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5
-                }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="rating"
-                  label={{
-                    value: "Rating",
-                    position: "insideBottomRight",
-                    offset: -5
-                  }}
-                />
-                <YAxis
-                  label={{
-                    value: "Count",
-                    angle: -90,
-                    position: "insideLeft"
-                  }}
-                />
+                <XAxis dataKey="rating" />
+                <YAxis />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#fff",
                     border: "1px solid #e5e7eb",
-                    borderRadius: "0.375rem"
+                    borderRadius: "0.375rem",
                   }}
                 />
                 <Legend />
@@ -308,7 +238,7 @@ function StatCard({
   title,
   value,
   suffix = "",
-  color = "bg-blue-100 text-blue-800"
+  color = "bg-blue-100 text-blue-800",
 }: {
   title: string;
   value: string | number;
@@ -326,13 +256,7 @@ function StatCard({
   );
 }
 
-function Card({
-  title,
-  children
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h3 className="text-lg font-semibold mb-4">{title}</h3>
@@ -356,7 +280,8 @@ function TableRow({ review }: { review: Feedback }) {
   const sentimentColors: Record<Feedback["sentiment"], string> = {
     positive: "bg-green-100 text-green-800",
     neutral: "bg-yellow-100 text-yellow-800",
-    negative: "bg-red-100 text-red-800"
+    negative: "bg-red-100 text-red-800",
+    Unknown: "bg-gray-100 text-gray-800",
   };
 
   return (
