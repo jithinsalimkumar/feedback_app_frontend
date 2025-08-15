@@ -40,10 +40,10 @@ const Signup = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-8">
-                    <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                    <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
                         <User className="h-8 w-8 text-white" />
                     </div>
                     <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
@@ -62,7 +62,7 @@ const Signup = () => {
                                 name="email"
                                 value={form.email}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Enter your email"
                                 required
                             />
@@ -80,7 +80,7 @@ const Signup = () => {
                                 name="password"
                                 value={form.password}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Enter your password"
                                 required
                             />
@@ -114,7 +114,7 @@ const Signup = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+                        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                     >
                         {isLoading ? "Creating Account..." : "Create Account"}
                     </button>
@@ -125,7 +125,7 @@ const Signup = () => {
                         Already have an account?{" "}
                         <button
                             onClick={() => navigate("/login")}
-                            className="text-green-600 hover:text-green-500 font-medium cursor-pointer"
+                            className="text-blue-600 hover:text-blue-500 font-medium cursor-pointer"
                         >
                             Sign in
                         </button>
